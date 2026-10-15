@@ -1,0 +1,218 @@
+object frmMain: TfrmMain
+  Left = 367
+  Height = 446
+  Top = 32
+  Width = 650
+  Caption = 'SystemD Service Manager'
+  ClientHeight = 446
+  ClientWidth = 650
+  DesignTimePPI = 100
+  Position = poDesktopCenter
+  OnCreate = FormCreate
+  object pnlServiceActions: TPanel
+    Left = 0
+    Height = 397
+    Top = 27
+    Width = 177
+    Align = alLeft
+    ClientHeight = 397
+    ClientWidth = 177
+    TabOrder = 0
+    object lblServiceName: TLabel
+      Left = 9
+      Height = 20
+      Top = 9
+      Width = 159
+      Align = alTop
+      Alignment = taCenter
+      BorderSpacing.Around = 8
+      Caption = 'Service name'
+    end
+    object lblServiceDescription: TLabel
+      Left = 9
+      Height = 40
+      Top = 37
+      Width = 159
+      Align = alTop
+      BorderSpacing.Around = 8
+      Caption = 'This is a long service description.'
+      WordWrap = True
+    end
+    object lblAction: TLabel
+      Left = 9
+      Height = 20
+      Top = 85
+      Width = 159
+      Align = alTop
+      Alignment = taCenter
+      BorderSpacing.Around = 8
+      Caption = 'Actions'
+    end
+    object btnServiceEnable: TButton
+      Left = 9
+      Height = 26
+      Top = 113
+      Width = 159
+      Align = alTop
+      BorderSpacing.Around = 8
+      Caption = 'Enable'
+      TabOrder = 0
+    end
+    object btnServiceDisable: TButton
+      Left = 9
+      Height = 26
+      Top = 147
+      Width = 159
+      Align = alTop
+      BorderSpacing.Around = 8
+      Caption = 'Disable'
+      TabOrder = 1
+    end
+    object btnServiceStart: TButton
+      Left = 9
+      Height = 26
+      Top = 181
+      Width = 159
+      Align = alTop
+      BorderSpacing.Around = 8
+      Caption = 'Start'
+      TabOrder = 2
+    end
+    object btnServiceStop: TButton
+      Left = 9
+      Height = 26
+      Top = 215
+      Width = 159
+      Align = alTop
+      BorderSpacing.Around = 8
+      Caption = 'Stop'
+      TabOrder = 3
+    end
+    object btnServiceRestart: TButton
+      Left = 9
+      Height = 26
+      Top = 249
+      Width = 159
+      Align = alTop
+      BorderSpacing.Around = 8
+      Caption = 'Restart'
+      TabOrder = 4
+    end
+  end
+  object lvwServiceList: TListView
+    Left = 177
+    Height = 397
+    Top = 27
+    Width = 473
+    Align = alClient
+    Columns = <    
+      item
+        Caption = 'Unit'
+        Width = 100
+      end    
+      item
+        Caption = 'Load'
+        Width = 80
+      end    
+      item
+        Caption = 'Active'
+        Width = 80
+      end    
+      item
+        Caption = 'Sub'
+        Width = 100
+      end    
+      item
+        Caption = 'Description'
+        Width = 200
+      end>
+    GridLines = True
+    TabOrder = 1
+    ViewStyle = vsReport
+    OnChange = lvwServiceListChange
+    OnSelectItem = lvwServiceListSelectItem
+  end
+  object StatusBar1: TStatusBar
+    Left = 0
+    Height = 22
+    Top = 424
+    Width = 650
+    Panels = <>
+  end
+  object ToolBar1: TToolBar
+    Left = 0
+    Height = 27
+    Top = 0
+    Width = 650
+    Caption = 'ToolBar1'
+    Images = ImageList1
+    TabOrder = 3
+    object tbRefresh: TToolButton
+      Left = 1
+      Hint = 'Refresh the list'
+      Top = 2
+      Caption = 'Refresh'
+      ImageIndex = 0
+      OnClick = tbRefreshClick
+    end
+    object tb: TToolButton
+      Left = 25
+      Hint = 'Execute SystemD daemon reload'
+      Top = 2
+      Caption = 'Daemon Reload'
+      ImageIndex = 1
+      OnClick = tbClick
+    end
+    object ToolButton3: TToolButton
+      Left = 49
+      Height = 23
+      Top = 2
+      Caption = 'ToolButton3'
+      Style = tbsSeparator
+    end
+    object tbInfo: TToolButton
+      Left = 57
+      Hint = 'Information about this software'
+      Top = 2
+      Caption = 'About'
+      ImageIndex = 2
+      OnClick = tbInfoClick
+    end
+  end
+  object ImageList1: TImageList
+    Left = 340
+    Top = 136
+    Bitmap = {
+      4C7A030000001000000010000000910300000000000078DAAD544B6FD34010EE
+      FF40D0571012FC03A0751E405B7141451C40E24613DBA95421C4912B54FC0054
+      F5918434B6E3245C39730252DA2B371415109702A569D2C489BDC3ECFA113F49
+      8A3AD1CA1BCF7C33DFCE7CEBB1B1B337ADDD846EFB1834D7EAE2BB61B86EEBC8
+      83095B5179B4F670EC20C7712087D6327D3DCCEF8FBF7ABF09D71E34E195FCDB
+      79E7E1EDC2C4730042EDC0873F8285971D48E421948366E1F78FBA10CF13F8F0
+      033CF8B7EFF6E157E7047D00CA672DC0C1FECFE50D16A3B55BA1E7A6BE19CC1F
+      85BF8EFE61782E0791F883638DC56CEE7602D82F3F75E6FBF83D58DFD33F8BC3
+      E6CE80C3FB6F069ECDE6D60C9D815B1F760EFF6A354F406BB50258537B5EBECD
+      560F66F1AC892D80AF7F7A6C5E6E4D87EB7734FD0DBF3FFF873B4B93C538C842
+      92AD929018A976319B0405714A2605467D0BB109B6FAF51C483CBE17E250447F
+      18B68C750008FE0031713076102F726CE9B857308FE905A8F0E1398A9919E697
+      050EF139D0B16EBFBEC9F6F41D35454C06B0F48CF4B9F16491C5E41E2D00418C
+      E15A057E9EF15B7B7C87C5CABC89296639C6CA6446A063F4F1D9017939EE6025
+      71165D5D87BF6D253EC5CE65E0CF367AB6BC789BE5B6F174BF2E2CB05EDAD647
+      0CED27F515F89B0DDDF1E850B3FA63D407781A4B51D40C8C29A5171A4EDF8464
+      A3EF70EB4299BFC13004FB6EE3553C2F31BA560502AAC035CCDED1B9F407675A
+      E6603D73CBE23FC017D27388493A5588C5BF88B5C0D517CA83900E14D2F34C07
+      12AE2DDC13A305BADEF3C46E8BA62E65AB0F1B4FEF99FC70060AAB85BC8C1E54
+      841468446758E9D943B079FB75A08A73E037FFCC5EF35CA8F62A7C8275965A11
+      F7B995BB0E666D651135101FF0463E61390AE20C2896AE24217968C757338943
+      5BA7253135F27740417DD9DA3E8D499969A88817A02C4CA21EA7A0264CC0363F
+      3D344F0971EAD2B4AB67DEDED584187E0762A17964CC0F44F7C4AF672F8394B9
+      E29B8881BCA6C0CB37E62FC56AF73F3D07B2F702824E82FA987472284BE70373
+      A6F606636AE278A84FC59EB033239728238C2D89F4ABC8BB8279C28CE2247E12
+      D4954B9119AA882DE37CC20258EDBD55D07757F13E45E0115BE527A2B9533CF6
+      2F0AAF88134C1BFFC4D3FA11FC4D5DC542FDFA08F8B2A5C91A9DFF29F9578581
+      9EA9B6CD8AAEFE23A62462FFB3B1209ED0F97BEF4339240761DF03DDA71FD41E
+      3F157A0714BC3F4AFA5CA45E2AA847B76EA34CCD5C64BDA575CA029DD138A811
+      F7F72F94AF5808
+    }
+  end
+end

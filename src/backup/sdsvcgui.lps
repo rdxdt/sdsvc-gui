@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <Version Value="12"/>
+    <BuildModes Active="Default"/>
+    <Units>
+      <Unit>
+        <Filename Value="sdsvcgui.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="-1"/>
+        <TopLine Value="-1"/>
+        <CursorPos X="-1" Y="-1"/>
+        <UsageCount Value="20"/>
+      </Unit>
+      <Unit>
+        <Filename Value="ufrmmain.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmMain"/>
+        <ResourceBaseClass Value="Form"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="98"/>
+        <CursorPos X="15" Y="108"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="service.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="1"/>
+        <CursorPos X="51" Y="11"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+      </Unit>
+    </Units>
+    <JumpHistory HistoryIndex="8">
+      <Position>
+        <Filename Value="ufrmmain.pas"/>
+      </Position>
+      <Position>
+        <Filename Value="ufrmmain.pas"/>
+        <Caret Line="9" Column="20" TopLine="22"/>
+      </Position>
+      <Position>
+        <Filename Value="ufrmmain.pas"/>
+        <Caret Line="56" Column="38" TopLine="34"/>
+      </Position>
+      <Position>
+        <Filename Value="ufrmmain.pas"/>
+        <Caret Line="72" Column="2" TopLine="40"/>
+      </Position>
+      <Position>
+        <Filename Value="ufrmmain.pas"/>
+        <Caret Line="9" Column="29"/>
+      </Position>
+      <Position>
+        <Filename Value="ufrmmain.pas"/>
+        <Caret Line="105" Column="32" TopLine="69"/>
+      </Position>
+      <Position>
+        <Filename Value="ufrmmain.pas"/>
+        <Caret Line="124" Column="60" TopLine="88"/>
+      </Position>
+      <Position>
+        <Filename Value="ufrmmain.pas"/>
+        <Caret Line="88" Column="24" TopLine="66"/>
+      </Position>
+      <Position>
+        <Filename Value="ufrmmain.pas"/>
+        <Caret Line="94" Column="24" TopLine="66"/>
+      </Position>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>
