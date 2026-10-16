@@ -1,0 +1,33 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+LAZ_CONFIG := $(CURDIR)/debian/.lazarus-config
+ICON_SIZES := 16 22 24 32 48 64 96 128 256 512
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	# Nothing to configure for a Lazarus project.
+
+override_dh_auto_build:
+	lazbuild --primary-config-path=$(LAZ_CONFIG) \
+		--build-mode=Default --widgetset=gtk2 \
+		src/sdsvcgui.lpi
+
+override_dh_auto_test:
+	# No test suite.
+
+override_dh_auto_install:
+	set -e; for s in $(ICON_SIZES); do \
+		install -D -m 0644 img/sdsvcgui-$${s}x$${s}.png \
+			debian/sdsvcgui/usr/share/icons/hicolor/$${s}x$${s}/apps/sdsvcgui.png; \
+	done
+
+# FPC's DWARF output is not always understood by dwz; skip it.
+override_dh_dwz:
+
+override_dh_auto_clean:
+	rm -rf src/lib src/sdsvcgui $(LAZ_CONFIG)

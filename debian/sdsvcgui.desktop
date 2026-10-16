@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=SystemD Service Manager
+Comment=Start, stop, enable and disable systemd services
+Exec=sdsvcgui
+Icon=sdsvcgui
+Terminal=false
+Categories=System;Settings;GTK;
+Keywords=systemd;service;systemctl;daemon;

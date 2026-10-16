@@ -1,0 +1,23 @@
+Source: sdsvcgui
+Section: admin
+Priority: optional
+Maintainer: Rodrigo P <26395459+rdxdt@users.noreply.github.com>
+Build-Depends: debhelper-compat (= 13),
+               lazarus-project | lcl-utils,
+               lazarus-project | lcl-gtk2,
+               fpc-laz | fpc,
+               libgtk2.0-dev
+Standards-Version: 4.7.0
+Homepage: https://github.com/rdxdt/sdsvc-gui
+Rules-Requires-Root: no
+
+Package: sdsvcgui
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         libgtk2.0-0t64,
+         systemd
+Description: graphical manager for systemd services
+ SystemD Service Manager is a small Lazarus/LCL (GTK2) application that
+ lists systemd units and lets you start, stop, restart, enable and
+ disable services through systemctl.

@@ -1,0 +1,2 @@
+src/sdsvcgui usr/bin
+debian/sdsvcgui.desktop usr/share/applications

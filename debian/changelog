@@ -1,0 +1,5 @@
+sdsvcgui (0.1.0) unstable; urgency=medium
+
+  * Initial Debian packaging.
+
+ -- Rodrigo P <26395459+rdxdt@users.noreply.github.com>  Fri, 16 Oct 2026 06:22:32 -0300
