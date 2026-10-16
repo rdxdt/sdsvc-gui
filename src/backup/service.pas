@@ -146,14 +146,14 @@ begin
     LProcess.Options := [poUsePipes, poNoConsole];
     LProcess.Execute;
 
-    // Lê a saída enquanto o processo roda, para o pipe não encher e travar
+    // read the output of the process and store into the memory stream
     repeat
       LBytesRead := LProcess.Output.Read(LBuffer, BUF_SIZE);
       if LBytesRead > 0 then
         AOutput.Write(LBuffer, LBytesRead);
     until (LBytesRead = 0) and not LProcess.Running;
 
-    // Restante que possa ter ficado no pipe após o término
+    // read what maybe is left in the pipe
     repeat
       LBytesRead := LProcess.Output.Read(LBuffer, BUF_SIZE);
       if LBytesRead > 0 then
@@ -177,7 +177,6 @@ var
 begin
   Result := False;
   Clear;
-
   LOutput := TMemoryStream.Create;
   try
     ReadProcessOutput(LOutput);
@@ -188,6 +187,7 @@ begin
     try
       if not (LData is TJSONArray) then
         Exit;
+      //Parse the JSON
       LArray := TJSONArray(LData);
 
       for I := 0 to LArray.Count - 1 do
