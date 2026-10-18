@@ -40,7 +40,9 @@
 | Package | Purpose |
 |---|---|
 | `systemd` | Provides `systemctl`, which the application calls for every operation |
-| `libgtk2.0-0t64` | GTK2, the LCL widgetset the application is built with |
+| `libgtk2.0-0t64` | GTK2, if you're building with gtk2 |
+| `libqt6pas6`| Default widget set of the application (runtime package) |
+| `libqt6pas6-dev`| Default widget set of application (development) |
 | `libglib2.0-0t64`, `libpango-1.0-0`, `libcairo2`, `libgdk-pixbuf-2.0-0`, `libatk1.0-0t64`, `libx11-6` | Libraries GTK2 depends on |
 
 Package names are for **Debian 13 (trixie)**. If you install the `.deb`, `apt` pulls in all of them automatically.
