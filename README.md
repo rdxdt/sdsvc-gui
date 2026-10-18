@@ -63,7 +63,7 @@ Open `src/sdsvcgui.lpi` and press **Run → Build** (`Shift+F9`). The binary is 
 ### From the command line
 
 ```bash
-lazbuild --widgetset=gtk2 src/sdsvcgui.lpi
+lazbuild --widgetset=qt6 src/sdsvcgui.lpi
 ```
 
 ## Packaging (.deb)
