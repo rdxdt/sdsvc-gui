@@ -6,43 +6,46 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
-  ComCtrls, Process, Service, BaseUnix;
+  ComCtrls, Buttons, Process, Service;
 
 type
 
   { TfrmMain }
 
   TfrmMain = class(TForm)
+    btnDaemonReload: TBitBtn;
+    BitBtn2: TBitBtn;
+    btnRefresh: TBitBtn;
     btnServiceEnable: TButton;
     btnServiceDisable: TButton;
     btnServiceStart: TButton;
     btnServiceStop: TButton;
     btnServiceRestart: TButton;
+    cbxFilterType: TComboBox;
+    cbxFilterState: TComboBox;
     ImageList1: TImageList;
     lblServiceName: TLabel;
     lblServiceDescription: TLabel;
     lblAction: TLabel;
     lvwServiceList: TListView;
+    Panel1: TPanel;
     pnlServiceActions: TPanel;
     StatusBar1: TStatusBar;
-    ToolBar1: TToolBar;
-    tbRefresh: TToolButton;
-    tb: TToolButton;
-    ToolButton3: TToolButton;
-    tbInfo: TToolButton;
+    procedure BitBtn2Click(Sender: TObject);
+    procedure btnDaemonReloadClick(Sender: TObject);
+    procedure btnRefreshClick(Sender: TObject);
     procedure btnServiceDisableClick(Sender: TObject);
     procedure btnServiceEnableClick(Sender: TObject);
     procedure btnServiceRestartClick(Sender: TObject);
     procedure btnServiceStartClick(Sender: TObject);
     procedure btnServiceStopClick(Sender: TObject);
+    procedure cbxFilterStateChange(Sender: TObject);
+    procedure cbxFilterTypeChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure lvwServiceListChange(Sender: TObject; Item: TListItem;
       Change: TItemChange);
     procedure lvwServiceListSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
-    procedure tbRefreshClick(Sender: TObject);
-    procedure tbClick(Sender: TObject);
-    procedure tbInfoClick(Sender: TObject);
     procedure RefreshServiceList;
     procedure UpdateServiceDetails;
   private
@@ -56,37 +59,28 @@ var
 
 implementation
 
+uses UDlgAbout;
+
 {$R *.lfm}
 
 { TfrmMain }
 
-procedure TfrmMain.tbInfoClick(Sender: TObject);
-begin
-  MessageDlg('About this application',
-    'SystemD Service Manager by rdxdt'+#13+
-    'https://github.com/rdxdt/sdsvc-gui'+#13+
-    'Icons from https://freeicon.com',
-    mtInformation,
-    [mbOk],
-    0);
-end;
-
-procedure TfrmMain.tbClick(Sender: TObject);
-var
-  LOutput : String;
-begin
-  if MessageDlg('Are yo usure you want to daemon-reload?',mtConfirmation,[mbYes,mbNo],0) = mrYes then
-  begin
-    RunCommand('systemctl', ['daemon-reload'], LOutput, [poStderrToOutPut]);
-    MessageDlg(LOutput,mtInformation,[mbOk],0);
-  end;
-end;
-
-procedure TfrmMain.tbRefreshClick(Sender: TObject);
+procedure TfrmMain.btnRefreshClick(Sender: TObject);
 begin
   RefreshServiceList;
   lvwServiceList.ItemIndex := 0;
   UpdateServiceDetails;
+end;
+
+procedure TfrmMain.btnDaemonReloadClick(Sender: TObject);
+begin
+  if not ServiceList.DaemonReload then
+    MessageDlg('Daemon reload failed',mtError,[mbOk],0);
+end;
+
+procedure TfrmMain.BitBtn2Click(Sender: TObject);
+begin
+  dlgAbout.ShowModal;
 end;
 
 procedure TfrmMain.lvwServiceListChange(Sender: TObject; Item: TListItem;
@@ -117,6 +111,18 @@ begin
     mbYes,mbNo],0) = mrNo then
     Exit;
   ServiceList.Items[lvwServiceList.ItemIndex].Stop;
+end;
+
+procedure TfrmMain.cbxFilterStateChange(Sender: TObject);
+begin
+  ServiceList.ServiceFilterState:= TServiceFilterState(cbxFilterState.ItemIndex);
+  RefreshServiceList;
+end;
+
+procedure TfrmMain.cbxFilterTypeChange(Sender: TObject);
+begin
+  ServiceList.ServiceFilterType:= TServiceFilterType(cbxFilterType.ItemIndex);
+  RefreshServiceList;
 end;
 
 procedure TfrmMain.btnServiceRestartClick(Sender: TObject);

@@ -11,6 +11,12 @@ type
   TServiceStatus = (ssStopped, ssStarted, ssFailed);
 
 type
+  TServiceFilterType = (ftUser, ftSystem, ftAll);
+
+type
+  TServiceFilterState = (fsInactive, fsRunning, fsFailed, fsAll);
+
+type
   TService = class(TObject)
     private
       FUnitName : String;
@@ -39,6 +45,9 @@ type
   TServiceList = class(TObject)
     private
       FItems : TFPList;
+      FServiceFilterType : TServiceFilterType;
+      FServiceFilterState : TServiceFilterState;
+
 
       function GetCount : Integer;
       function GetItem(AIndex : Integer) : TService;
@@ -49,9 +58,12 @@ type
 
       procedure Clear;
       function Parse : Boolean;
+      function DaemonReload : Boolean;
 
       property Count : Integer read GetCount;
       property Items[AIndex : Integer] : TService read GetItem; default;
+      property ServiceFilterType : TServiceFilterType read FServiceFilterType write FServiceFilterType;
+      property ServiceFilterState : TServiceFilterState read FServiceFilterState write FServiceFilterState;
   end;
 
 
@@ -97,6 +109,8 @@ constructor TServiceList.Create;
 begin
   inherited Create;
   FItems := TFPList.Create;
+  FServiceFilterType := ftAll;
+  FServiceFilterState := fsAll;
 end;
 
 destructor TServiceList.Destroy;
@@ -139,7 +153,17 @@ begin
     LProcess.Parameters.Add('list-units');
     LProcess.Parameters.Add('--type');
     LProcess.Parameters.Add('service');
-    LProcess.Parameters.Add('--all');
+    case FServiceFilterType of
+      ftUser:   LProcess.Parameters.Add('--user');
+      ftSystem: LProcess.Parameters.Add('--system');
+      ftAll:    LProcess.Parameters.Add('--all');
+    end;
+    case FServiceFilterState of
+      fsInactive: LProcess.Parameters.Add('--state=inactive');
+      fsRunning: LProcess.Parameters.Add('--state=running');
+      fsFailed:  LProcess.Parameters.Add('--state=failed');
+    end;
+
     LProcess.Parameters.Add('--no-pager');
     LProcess.Parameters.Add('--output');
     LProcess.Parameters.Add('json');
@@ -220,6 +244,13 @@ begin
   finally
     LOutput.Free;
   end;
+end;
+
+function TServiceList.DaemonReload:Boolean;
+var
+  Dummy : String;
+begin
+  Result:= RunCommand('systemctl',['daemon-reload'],Dummy,[poStderrToOutPut]);
 end;
 
 end.
