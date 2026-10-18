@@ -16,7 +16,7 @@
   <br>
   <img alt="Lazarus 4.0" src="https://img.shields.io/badge/Lazarus-4.0-1E5C99">
   <img alt="Free Pascal 3.2.2" src="https://img.shields.io/badge/Free%20Pascal-3.2.2-E8A33D">
-  <img alt="Widgetset: GTK2" src="https://img.shields.io/badge/widgetset-GTK2-4A86CF?logo=gtk&logoColor=white">
+  <img alt="Widgetset: qt6" src="https://img.shields.io/badge/widgetset-GTK2-4A86CF?logo=gtk&logoColor=white">
   <a href="https://github.com/rdxdt/sdsvc-gui/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/rdxdt/sdsvc-gui"></a>
   <a href="https://github.com/rdxdt/sdsvc-gui/issues"><img alt="Open issues" src="https://img.shields.io/github/issues/rdxdt/sdsvc-gui"></a>
 </p>
