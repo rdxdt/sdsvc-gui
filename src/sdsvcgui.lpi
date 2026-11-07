@@ -48,6 +48,7 @@
         <Filename Value="udlgabout.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="dlgAbout"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit>
     </Units>

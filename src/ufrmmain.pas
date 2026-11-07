@@ -23,7 +23,6 @@ type
     btnServiceRestart: TButton;
     cbxFilterType: TComboBox;
     cbxFilterState: TComboBox;
-    ImageList1: TImageList;
     lblServiceName: TLabel;
     lblServiceDescription: TLabel;
     lblAction: TLabel;
@@ -47,6 +46,7 @@ type
     procedure lvwServiceListSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
     procedure RefreshServiceList;
+    procedure RefreshAfterAction(const AUnitName : String);
     procedure UpdateServiceDetails;
   private
 
@@ -111,6 +111,7 @@ begin
     mbYes,mbNo],0) = mrNo then
     Exit;
   ServiceList.Items[lvwServiceList.ItemIndex].Stop;
+  RefreshAfterAction(ServiceList.Items[lvwServiceList.ItemIndex].UnitName);
 end;
 
 procedure TfrmMain.cbxFilterStateChange(Sender: TObject);
@@ -134,6 +135,7 @@ begin
     mbYes,mbNo],0) = mrNo then
     Exit;
   ServiceList.Items[lvwServiceList.ItemIndex].Restart;
+  RefreshAfterAction(ServiceList.Items[lvwServiceList.ItemIndex].UnitName);
 end;
 
 procedure TfrmMain.btnServiceDisableClick(Sender: TObject);
@@ -145,6 +147,7 @@ begin
     mbYes,mbNo],0) = mrNo then
     Exit;
   ServiceList.Items[lvwServiceList.ItemIndex].Disable;
+  RefreshAfterAction(ServiceList.Items[lvwServiceList.ItemIndex].UnitName);
 end;
 
 procedure TfrmMain.btnServiceEnableClick(Sender: TObject);
@@ -156,6 +159,7 @@ begin
     mbYes,mbNo],0) = mrNo then
     Exit;
   ServiceList.Items[lvwServiceList.ItemIndex].Enable;
+  RefreshAfterAction(ServiceList.Items[lvwServiceList.ItemIndex].UnitName);
 end;
 
 procedure TfrmMain.btnServiceStartClick(Sender: TObject);
@@ -167,6 +171,7 @@ begin
     mbYes,mbNo],0) = mrNo then
     Exit;
   ServiceList.Items[lvwServiceList.ItemIndex].Start;
+  RefreshAfterAction(ServiceList.Items[lvwServiceList.ItemIndex].UnitName);
 end;
 
 procedure TfrmMain.RefreshServiceList;
@@ -186,6 +191,7 @@ begin
     L := lvwServiceList.Items.Add;
     L.Caption := ServiceList.Items[I].UnitName;
     L.SubItems.Add(BoolToStr(ServiceList.Items[I].Loaded,True));
+    L.SubItems.Add(ServiceList.Items[I].UnitFileState);
     L.SubItems.Add(BoolToStr(ServiceList.Items[I].Active,True));
     case ServiceList.Items[I].Status of
       ssStopped:
@@ -208,6 +214,21 @@ begin
   end;
 end;
 
+procedure TfrmMain.RefreshAfterAction(const AUnitName : String);
+var
+  I : Integer;
+begin
+  RefreshServiceList;
+  lvwServiceList.ItemIndex := -1;
+  for I := 0 to ServiceList.Count - 1 do
+    if ServiceList.Items[I].UnitName = AUnitName then
+    begin
+      lvwServiceList.ItemIndex := I;
+      Break;
+    end;
+  UpdateServiceDetails;
+end;
+
 procedure TfrmMain.UpdateServiceDetails;
 begin
   if lvwServiceList.ItemIndex = -1 then
@@ -225,8 +246,8 @@ begin
     ServiceList.Items[lvwServiceList.ItemIndex].UnitName;
   lblServiceDescription.Caption :=
     ServiceList.Items[lvwServiceList.ItemIndex].Description;
-  btnServiceEnable.Enabled := not ServiceList.Items[lvwServiceList.ItemIndex].Loaded;
-  btnServiceDisable.Enabled := ServiceList.Items[lvwServiceList.ItemIndex].Loaded;
+  btnServiceEnable.Enabled := ServiceList.Items[lvwServiceList.ItemIndex].CanEnable;
+  btnServiceDisable.Enabled := ServiceList.Items[lvwServiceList.ItemIndex].IsEnabled;
   case ServiceList.Items[lvwServiceList.ItemIndex].Status of
     ssStopped:
       begin

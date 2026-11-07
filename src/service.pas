@@ -22,6 +22,7 @@ type
       FUnitName : String;
       FDescription : String;
       FLoaded : Boolean;
+      FUnitFileState : String;
       FActive : Boolean;
       FStatus : TServiceStatus;
 
@@ -30,6 +31,11 @@ type
       property UnitName : String read FUnitName;
       property Description : String read FDescription;
       property Loaded : Boolean read FLoaded;
+      // enablement state from "systemctl list-unit-files" (enabled, disabled,
+      // static, masked, indirect, ...). Empty when it could not be determined.
+      property UnitFileState : String read FUnitFileState;
+      function IsEnabled : Boolean;
+      function CanEnable : Boolean;
       property Active : Boolean read FActive;
       property Status : TServiceStatus read FStatus;
 
@@ -52,6 +58,7 @@ type
       function GetCount : Integer;
       function GetItem(AIndex : Integer) : TService;
       procedure ReadProcessOutput(AOutput : TMemoryStream);
+      procedure ReadUnitFileStates(AStates : TStringList);
     public
       constructor Create;
       destructor Destroy; override;
@@ -76,6 +83,17 @@ var
   LOutput : String;
 begin
   Result := RunCommand('systemctl', [AAction, FUnitName], LOutput, [poStderrToOutPut]);
+end;
+
+function TService.IsEnabled : Boolean;
+begin
+  // enabled, enabled-runtime
+  Result := Pos('enabled', FUnitFileState) = 1;
+end;
+
+function TService.CanEnable : Boolean;
+begin
+  Result := FUnitFileState = 'disabled';
 end;
 
 function TService.Start : Boolean;
@@ -189,9 +207,48 @@ begin
   AOutput.Position := 0;
 end;
 
+procedure TServiceList.ReadUnitFileStates(AStates : TStringList);
+var
+  LArgs : array of String;
+  LOutput : String;
+  LData : TJSONData;
+  LArray : TJSONArray;
+  LObj : TJSONObject;
+  I : Integer;
+begin
+  AStates.Clear;
+  if FServiceFilterType = ftUser then
+    LArgs := ['list-unit-files', '--type', 'service', '--user', '--no-pager', '--output', 'json']
+  else
+    LArgs := ['list-unit-files', '--type', 'service', '--no-pager', '--output', 'json'];
+  if not RunCommand('systemctl', LArgs, LOutput, [poNoConsole]) then
+    Exit;
+  if LOutput = '' then
+    Exit;
+
+  LData := GetJSON(LOutput);
+  try
+    if not (LData is TJSONArray) then
+      Exit;
+    LArray := TJSONArray(LData);
+    for I := 0 to LArray.Count - 1 do
+    begin
+      if not (LArray.Items[I] is TJSONObject) then
+        Continue;
+      LObj := LArray.Objects[I];
+      AStates.Values[LObj.Get('unit_file', '')] := LObj.Get('state', '');
+    end;
+  finally
+    LData.Free;
+  end;
+end;
+
 function TServiceList.Parse : Boolean;
 var
   LOutput : TMemoryStream;
+  LStates : TStringList;
+  LTemplate : String;
+  LAtPos : Integer;
   LData : TJSONData;
   LArray : TJSONArray;
   LObj : TJSONObject;
@@ -201,8 +258,10 @@ var
 begin
   Result := False;
   Clear;
+  LStates := TStringList.Create;
   LOutput := TMemoryStream.Create;
   try
+    ReadUnitFileStates(LStates);
     ReadProcessOutput(LOutput);
     if LOutput.Size = 0 then
       Exit;
@@ -225,6 +284,16 @@ begin
         LService.FDescription := LObj.Get('description', '');
         LService.FLoaded := LObj.Get('load', '') = 'loaded';
 
+        LService.FUnitFileState := LStates.Values[LService.FUnitName];
+        // template instances (foo@bar.service) are listed as foo@.service
+        LAtPos := Pos('@', LService.FUnitName);
+        if (LService.FUnitFileState = '') and (LAtPos > 0) then
+        begin
+          LTemplate := Copy(LService.FUnitName, 1, LAtPos) +
+            Copy(LService.FUnitName, LastDelimiter('.', LService.FUnitName), MaxInt);
+          LService.FUnitFileState := LStates.Values[LTemplate];
+        end;
+
         LActive := LObj.Get('active', '');
         LService.FActive := LActive = 'active';
         if LActive = 'active' then
@@ -243,6 +312,7 @@ begin
     end;
   finally
     LOutput.Free;
+    LStates.Free;
   end;
 end;
 
