@@ -16,7 +16,7 @@
   <br>
   <img alt="Lazarus 4.0" src="https://img.shields.io/badge/Lazarus-4.0-1E5C99">
   <img alt="Free Pascal 3.2.2" src="https://img.shields.io/badge/Free%20Pascal-3.2.2-E8A33D">
-  <img alt="Widgetset: GTK2" src="https://img.shields.io/badge/widgetset-GTK2-4A86CF?logo=gtk&logoColor=white">
+  <img alt="Widgetset: qt6" src="https://img.shields.io/badge/widgetset-qt6-4A86CF?logo=gtk&logoColor=white">
   <a href="https://github.com/rdxdt/sdsvc-gui/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/rdxdt/sdsvc-gui"></a>
   <a href="https://github.com/rdxdt/sdsvc-gui/issues"><img alt="Open issues" src="https://img.shields.io/github/issues/rdxdt/sdsvc-gui"></a>
 </p>
@@ -40,7 +40,9 @@
 | Package | Purpose |
 |---|---|
 | `systemd` | Provides `systemctl`, which the application calls for every operation |
-| `libgtk2.0-0t64` | GTK2, the LCL widgetset the application is built with |
+| `libgtk2.0-0t64` | GTK2, if you're building with gtk2 |
+| `libqt6pas6`| Default widget set of the application (runtime package) |
+| `libqt6pas6-dev`| Default widget set of application (development) |
 | `libglib2.0-0t64`, `libpango-1.0-0`, `libcairo2`, `libgdk-pixbuf-2.0-0`, `libatk1.0-0t64`, `libx11-6` | Libraries GTK2 depends on |
 
 Package names are for **Debian 13 (trixie)**. If you install the `.deb`, `apt` pulls in all of them automatically.
@@ -63,7 +65,7 @@ Open `src/sdsvcgui.lpi` and press **Run → Build** (`Shift+F9`). The binary is 
 ### From the command line
 
 ```bash
-lazbuild --widgetset=gtk2 src/sdsvcgui.lpi
+lazbuild --widgetset=qt6 src/sdsvcgui.lpi
 ```
 
 ## Packaging (.deb)
