@@ -124,6 +124,10 @@ object frmMain: TfrmMain
         Width = 192
       end    
       item
+        Caption = 'Scope'
+        Width = 72
+      end    
+      item
         Caption = 'Load'
         Width = 96
       end    

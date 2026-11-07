@@ -46,7 +46,7 @@ type
     procedure lvwServiceListSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
     procedure RefreshServiceList;
-    procedure RefreshAfterAction(const AUnitName : String);
+    procedure RefreshAfterAction(AService : TService);
     procedure UpdateServiceDetails;
   private
 
@@ -111,7 +111,7 @@ begin
     mbYes,mbNo],0) = mrNo then
     Exit;
   ServiceList.Items[lvwServiceList.ItemIndex].Stop;
-  RefreshAfterAction(ServiceList.Items[lvwServiceList.ItemIndex].UnitName);
+  RefreshAfterAction(ServiceList.Items[lvwServiceList.ItemIndex]);
 end;
 
 procedure TfrmMain.cbxFilterStateChange(Sender: TObject);
@@ -135,7 +135,7 @@ begin
     mbYes,mbNo],0) = mrNo then
     Exit;
   ServiceList.Items[lvwServiceList.ItemIndex].Restart;
-  RefreshAfterAction(ServiceList.Items[lvwServiceList.ItemIndex].UnitName);
+  RefreshAfterAction(ServiceList.Items[lvwServiceList.ItemIndex]);
 end;
 
 procedure TfrmMain.btnServiceDisableClick(Sender: TObject);
@@ -147,7 +147,7 @@ begin
     mbYes,mbNo],0) = mrNo then
     Exit;
   ServiceList.Items[lvwServiceList.ItemIndex].Disable;
-  RefreshAfterAction(ServiceList.Items[lvwServiceList.ItemIndex].UnitName);
+  RefreshAfterAction(ServiceList.Items[lvwServiceList.ItemIndex]);
 end;
 
 procedure TfrmMain.btnServiceEnableClick(Sender: TObject);
@@ -159,7 +159,7 @@ begin
     mbYes,mbNo],0) = mrNo then
     Exit;
   ServiceList.Items[lvwServiceList.ItemIndex].Enable;
-  RefreshAfterAction(ServiceList.Items[lvwServiceList.ItemIndex].UnitName);
+  RefreshAfterAction(ServiceList.Items[lvwServiceList.ItemIndex]);
 end;
 
 procedure TfrmMain.btnServiceStartClick(Sender: TObject);
@@ -171,7 +171,7 @@ begin
     mbYes,mbNo],0) = mrNo then
     Exit;
   ServiceList.Items[lvwServiceList.ItemIndex].Start;
-  RefreshAfterAction(ServiceList.Items[lvwServiceList.ItemIndex].UnitName);
+  RefreshAfterAction(ServiceList.Items[lvwServiceList.ItemIndex]);
 end;
 
 procedure TfrmMain.RefreshServiceList;
@@ -190,6 +190,7 @@ begin
   begin
     L := lvwServiceList.Items.Add;
     L.Caption := ServiceList.Items[I].UnitName;
+    L.SubItems.Add(ScopeToStr(ServiceList.Items[I].Scope));
     L.SubItems.Add(BoolToStr(ServiceList.Items[I].Loaded,True));
     L.SubItems.Add(ServiceList.Items[I].UnitFileState);
     L.SubItems.Add(BoolToStr(ServiceList.Items[I].Active,True));
@@ -214,14 +215,20 @@ begin
   end;
 end;
 
-procedure TfrmMain.RefreshAfterAction(const AUnitName : String);
+procedure TfrmMain.RefreshAfterAction(AService : TService);
 var
   I : Integer;
+  LUnitName : String;
+  LScope : TServiceScope;
 begin
+  // copy before the refresh frees AService
+  LUnitName := AService.UnitName;
+  LScope := AService.Scope;
   RefreshServiceList;
   lvwServiceList.ItemIndex := -1;
   for I := 0 to ServiceList.Count - 1 do
-    if ServiceList.Items[I].UnitName = AUnitName then
+    if (ServiceList.Items[I].UnitName = LUnitName) and
+       (ServiceList.Items[I].Scope = LScope) then
     begin
       lvwServiceList.ItemIndex := I;
       Break;

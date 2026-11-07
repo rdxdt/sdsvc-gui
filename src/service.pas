@@ -14,12 +14,20 @@ type
   TServiceFilterType = (ftUser, ftSystem, ftAll);
 
 type
+  // which systemd manager a unit belongs to
+  TServiceScope = (scSystem, scUser);
+
+type
   TServiceFilterState = (fsInactive, fsRunning, fsFailed, fsAll);
+
+function ScopeSwitch(AScope : TServiceScope) : String;
+function ScopeToStr(AScope : TServiceScope) : String;
 
 type
   TService = class(TObject)
     private
       FUnitName : String;
+      FScope : TServiceScope;
       FDescription : String;
       FLoaded : Boolean;
       FUnitFileState : String;
@@ -29,6 +37,7 @@ type
       function RunSystemctl(const AAction : String) : Boolean;
     public
       property UnitName : String read FUnitName;
+      property Scope : TServiceScope read FScope;
       property Description : String read FDescription;
       property Loaded : Boolean read FLoaded;
       // enablement state from "systemctl list-unit-files" (enabled, disabled,
@@ -57,8 +66,9 @@ type
 
       function GetCount : Integer;
       function GetItem(AIndex : Integer) : TService;
-      procedure ReadProcessOutput(AOutput : TMemoryStream);
-      procedure ReadUnitFileStates(AStates : TStringList);
+      procedure ReadProcessOutput(AScope : TServiceScope; AOutput : TMemoryStream);
+      procedure ReadUnitFileStates(AScope : TServiceScope; AStates : TStringList);
+      function ParseScope(AScope : TServiceScope) : Boolean;
     public
       constructor Create;
       destructor Destroy; override;
@@ -76,13 +86,30 @@ type
 
 implementation
 
+function ScopeSwitch(AScope : TServiceScope) : String;
+begin
+  if AScope = scUser then
+    Result := '--user'
+  else
+    Result := '--system';
+end;
+
+function ScopeToStr(AScope : TServiceScope) : String;
+begin
+  if AScope = scUser then
+    Result := 'User'
+  else
+    Result := 'System';
+end;
+
 { TService }
 
 function TService.RunSystemctl(const AAction : String) : Boolean;
 var
   LOutput : String;
 begin
-  Result := RunCommand('systemctl', [AAction, FUnitName], LOutput, [poStderrToOutPut]);
+  Result := RunCommand('systemctl', [ScopeSwitch(FScope), AAction, FUnitName],
+    LOutput, [poStderrToOutPut]);
 end;
 
 function TService.IsEnabled : Boolean;
@@ -157,7 +184,7 @@ begin
   Result := TService(FItems[AIndex]);
 end;
 
-procedure TServiceList.ReadProcessOutput(AOutput : TMemoryStream);
+procedure TServiceList.ReadProcessOutput(AScope : TServiceScope; AOutput : TMemoryStream);
 const
   BUF_SIZE = 4096;
 var
@@ -171,15 +198,13 @@ begin
     LProcess.Parameters.Add('list-units');
     LProcess.Parameters.Add('--type');
     LProcess.Parameters.Add('service');
-    case FServiceFilterType of
-      ftUser:   LProcess.Parameters.Add('--user');
-      ftSystem: LProcess.Parameters.Add('--system');
-      ftAll:    LProcess.Parameters.Add('--all');
-    end;
+    LProcess.Parameters.Add(ScopeSwitch(AScope));
     case FServiceFilterState of
       fsInactive: LProcess.Parameters.Add('--state=inactive');
       fsRunning: LProcess.Parameters.Add('--state=running');
       fsFailed:  LProcess.Parameters.Add('--state=failed');
+      // without --all, list-units hides inactive units
+      fsAll:     LProcess.Parameters.Add('--all');
     end;
 
     LProcess.Parameters.Add('--no-pager');
@@ -207,9 +232,8 @@ begin
   AOutput.Position := 0;
 end;
 
-procedure TServiceList.ReadUnitFileStates(AStates : TStringList);
+procedure TServiceList.ReadUnitFileStates(AScope : TServiceScope; AStates : TStringList);
 var
-  LArgs : array of String;
   LOutput : String;
   LData : TJSONData;
   LArray : TJSONArray;
@@ -217,11 +241,8 @@ var
   I : Integer;
 begin
   AStates.Clear;
-  if FServiceFilterType = ftUser then
-    LArgs := ['list-unit-files', '--type', 'service', '--user', '--no-pager', '--output', 'json']
-  else
-    LArgs := ['list-unit-files', '--type', 'service', '--no-pager', '--output', 'json'];
-  if not RunCommand('systemctl', LArgs, LOutput, [poNoConsole]) then
+  if not RunCommand('systemctl', ['list-unit-files', '--type', 'service',
+    ScopeSwitch(AScope), '--no-pager', '--output', 'json'], LOutput, [poNoConsole]) then
     Exit;
   if LOutput = '' then
     Exit;
@@ -245,6 +266,22 @@ end;
 
 function TServiceList.Parse : Boolean;
 var
+  LSystemOk, LUserOk : Boolean;
+begin
+  Clear;
+  case FServiceFilterType of
+    ftSystem: Result := ParseScope(scSystem);
+    ftUser:   Result := ParseScope(scUser);
+  else
+    // evaluate both so one failing (e.g. no user session bus) doesn't hide the other
+    LSystemOk := ParseScope(scSystem);
+    LUserOk := ParseScope(scUser);
+    Result := LSystemOk or LUserOk;
+  end;
+end;
+
+function TServiceList.ParseScope(AScope : TServiceScope) : Boolean;
+var
   LOutput : TMemoryStream;
   LStates : TStringList;
   LTemplate : String;
@@ -257,12 +294,11 @@ var
   I : Integer;
 begin
   Result := False;
-  Clear;
   LStates := TStringList.Create;
   LOutput := TMemoryStream.Create;
   try
-    ReadUnitFileStates(LStates);
-    ReadProcessOutput(LOutput);
+    ReadUnitFileStates(AScope, LStates);
+    ReadProcessOutput(AScope, LOutput);
     if LOutput.Size = 0 then
       Exit;
 
@@ -281,6 +317,7 @@ begin
 
         LService := TService.Create;
         LService.FUnitName := LObj.Get('unit', '');
+        LService.FScope := AScope;
         LService.FDescription := LObj.Get('description', '');
         LService.FLoaded := LObj.Get('load', '') = 'loaded';
 
