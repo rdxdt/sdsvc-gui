@@ -77,7 +77,7 @@ Section: admin
 Priority: optional
 Homepage: $HOMEPAGE
 Description: graphical manager for systemd services
- SystemD Service Manager is a small Lazarus/LCL (GTK2) application that
+ SystemD Service Manager is a small Lazarus/LCL (QT6) application that
  lists systemd units and lets you start, stop, restart, enable and
  disable services through systemctl.
 EOF
