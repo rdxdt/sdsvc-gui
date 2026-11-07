@@ -69,6 +69,8 @@ type
       procedure ReadProcessOutput(AScope : TServiceScope; AOutput : TMemoryStream);
       procedure ReadUnitFileStates(AScope : TServiceScope; AStates : TStringList);
       function ParseScope(AScope : TServiceScope) : Boolean;
+      procedure AddUnloadedUnits(AScope : TServiceScope; AStates, ASeen : TStringList);
+      function DaemonReloadScope(AScope : TServiceScope) : Boolean;
     public
       constructor Create;
       destructor Destroy; override;
@@ -100,6 +102,23 @@ begin
     Result := 'User'
   else
     Result := 'System';
+end;
+
+function StatusFromActiveState(const AActive : String) : TServiceStatus;
+begin
+  if AActive = 'active' then
+    Result := ssStarted
+  else if AActive = 'failed' then
+    Result := ssFailed
+  else
+    Result := ssStopped;
+end;
+
+function CompareServices(A, B : Pointer) : Integer;
+begin
+  Result := Ord(TService(A).Scope) - Ord(TService(B).Scope);
+  if Result = 0 then
+    Result := CompareStr(TService(A).UnitName, TService(B).UnitName);
 end;
 
 { TService }
@@ -278,6 +297,99 @@ begin
     LUserOk := ParseScope(scUser);
     Result := LSystemOk or LUserOk;
   end;
+  FItems.Sort(@CompareServices);
+end;
+
+// list-units only reports units systemd currently has in memory, so a stopped
+// and disabled service is usually missing from it. Add the remaining installed
+// unit files, using one "systemctl show" call to get their details.
+procedure TServiceList.AddUnloadedUnits(AScope : TServiceScope; AStates, ASeen : TStringList);
+const
+  FIXED_ARGS = 5;
+var
+  LNew, LLines : TStringList;
+  LArgs : array of String;
+  LOutput, LName, LState, LKey, LValue : String;
+  LId, LDescription, LLoad, LActive : String;
+  LService : TService;
+  LEq, I : Integer;
+
+  procedure FlushBlock;
+  var
+    LIdx : Integer;
+  begin
+    LIdx := LNew.IndexOf(LId);
+    if LIdx >= 0 then
+    begin
+      LService := TService(LNew.Objects[LIdx]);
+      LService.FDescription := LDescription;
+      LService.FLoaded := LLoad = 'loaded';
+      LService.FActive := LActive = 'active';
+      LService.FStatus := StatusFromActiveState(LActive);
+    end;
+    LId := ''; LDescription := ''; LLoad := ''; LActive := '';
+  end;
+
+begin
+  LNew := TStringList.Create;
+  LLines := TStringList.Create;
+  try
+    LNew.Sorted := True;
+    for I := 0 to AStates.Count - 1 do
+    begin
+      LName := AStates.Names[I];
+      LState := AStates.ValueFromIndex[I];
+      // aliases are listed under their real name; templates can't run uninstanced
+      if (LName = '') or (LState = 'alias') or (Pos('@.', LName) > 0) or
+         (ASeen.IndexOf(LName) >= 0) then
+        Continue;
+      LService := TService.Create;
+      LService.FUnitName := LName;
+      LService.FScope := AScope;
+      LService.FUnitFileState := LState;
+      LService.FStatus := ssStopped;
+      FItems.Add(LService);
+      LNew.AddObject(LName, LService);
+    end;
+    if LNew.Count = 0 then
+      Exit;
+
+    SetLength(LArgs, FIXED_ARGS + LNew.Count);
+    LArgs[0] := ScopeSwitch(AScope);
+    LArgs[1] := 'show';
+    LArgs[2] := '--no-pager';
+    LArgs[3] := '-p';
+    LArgs[4] := 'Id,Description,LoadState,ActiveState';
+    for I := 0 to LNew.Count - 1 do
+      LArgs[FIXED_ARGS + I] := LNew[I];
+    // details are optional: on failure the units keep their defaults
+    RunCommand('systemctl', LArgs, LOutput, [poNoConsole]);
+
+    // output is one "Key=Value" block per unit, separated by blank lines
+    LLines.Text := LOutput;
+    LId := ''; LDescription := ''; LLoad := ''; LActive := '';
+    for I := 0 to LLines.Count - 1 do
+    begin
+      if LLines[I] = '' then
+      begin
+        FlushBlock;
+        Continue;
+      end;
+      LEq := Pos('=', LLines[I]);
+      if LEq = 0 then
+        Continue;
+      LKey := Copy(LLines[I], 1, LEq - 1);
+      LValue := Copy(LLines[I], LEq + 1, MaxInt);
+      if LKey = 'Id' then LId := LValue
+      else if LKey = 'Description' then LDescription := LValue
+      else if LKey = 'LoadState' then LLoad := LValue
+      else if LKey = 'ActiveState' then LActive := LValue;
+    end;
+    FlushBlock;
+  finally
+    LLines.Free;
+    LNew.Free;
+  end;
 end;
 
 function TServiceList.ParseScope(AScope : TServiceScope) : Boolean;
@@ -289,12 +401,15 @@ var
   LData : TJSONData;
   LArray : TJSONArray;
   LObj : TJSONObject;
+  LSeen : TStringList;
   LService : TService;
   LActive : String;
   I : Integer;
 begin
   Result := False;
   LStates := TStringList.Create;
+  LSeen := TStringList.Create;
+  LSeen.Sorted := True;
   LOutput := TMemoryStream.Create;
   try
     ReadUnitFileStates(AScope, LStates);
@@ -318,6 +433,7 @@ begin
         LService := TService.Create;
         LService.FUnitName := LObj.Get('unit', '');
         LService.FScope := AScope;
+        LSeen.Add(LService.FUnitName);
         LService.FDescription := LObj.Get('description', '');
         LService.FLoaded := LObj.Get('load', '') = 'loaded';
 
@@ -333,15 +449,14 @@ begin
 
         LActive := LObj.Get('active', '');
         LService.FActive := LActive = 'active';
-        if LActive = 'active' then
-          LService.FStatus := ssStarted
-        else if LActive = 'failed' then
-          LService.FStatus := ssFailed
-        else
-          LService.FStatus := ssStopped;
+        LService.FStatus := StatusFromActiveState(LActive);
 
         FItems.Add(LService);
       end;
+
+      // units that aren't loaded are always inactive
+      if FServiceFilterState in [fsInactive, fsAll] then
+        AddUnloadedUnits(AScope, LStates, LSeen);
 
       Result := True;
     finally
@@ -349,15 +464,31 @@ begin
     end;
   finally
     LOutput.Free;
+    LSeen.Free;
     LStates.Free;
   end;
 end;
 
-function TServiceList.DaemonReload:Boolean;
+function TServiceList.DaemonReloadScope(AScope : TServiceScope) : Boolean;
 var
   Dummy : String;
 begin
-  Result:= RunCommand('systemctl',['daemon-reload'],Dummy,[poStderrToOutPut]);
+  Result := RunCommand('systemctl', [ScopeSwitch(AScope), 'daemon-reload'],
+    Dummy, [poStderrToOutPut]);
+end;
+
+function TServiceList.DaemonReload : Boolean;
+var
+  LSystemOk, LUserOk : Boolean;
+begin
+  case FServiceFilterType of
+    ftSystem: Result := DaemonReloadScope(scSystem);
+    ftUser:   Result := DaemonReloadScope(scUser);
+  else
+    LSystemOk := DaemonReloadScope(scSystem);
+    LUserOk := DaemonReloadScope(scUser);
+    Result := LSystemOk and LUserOk;
+  end;
 end;
 
 end.
