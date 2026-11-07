@@ -25,13 +25,15 @@
 
 ## Features
 
-- **Service list**: shows every systemd service unit (`systemctl list-units --type service --all`) with its unit name, load state, active state, status and description.
+- **Service list**: shows every systemd service unit with its unit name, scope (system or user), load state, enablement state, active state, status and description. Loaded units come from `systemctl list-units`, and installed unit files that systemd hasn't loaded (typically stopped, disabled services) are added from `systemctl list-unit-files`.
+- **Filters**: show system services, your user services (`systemctl --user`), or both, and narrow the list to inactive, running or failed services.
 - **Status icons**: each service is marked green (running), yellow (stopped) or red (failed).
 - **Service details**: select a service to see its name and description in the side panel.
 - **Service control**: **Start**, **Stop**, **Restart**, **Enable** and **Disable** the selected service. Each action asks for confirmation first.
-- **Context-aware buttons**: only the actions that make sense for the service's current state are enabled. For example, *Stop* and *Restart* are enabled only while the service is running.
-- **Daemon reload**: run `systemctl daemon-reload` from the toolbar after editing unit files, and see its output.
-- **Refresh**: reload the service list on demand.
+- **Context-aware buttons**: only the actions that make sense for the service's current state are enabled. For example, *Stop* and *Restart* are enabled only while the service is running, *Enable* only for disabled services, and *Disable* only for enabled ones. Static, masked and generated units can't be enabled or disabled.
+- **Scope-aware actions**: actions on a user service run against your user manager (`systemctl --user`), and actions on a system service run against the system manager.
+- **Daemon reload**: run `systemctl daemon-reload` from the toolbar after editing unit files. It reloads the manager(s) selected by the scope filter: system, user, or both.
+- **Refresh**: the list refreshes after every action, and on demand from the toolbar.
 
 ## Dependencies
 
@@ -109,18 +111,18 @@ Launch **SystemD Service Manager** from your desktop's application menu (under *
 sdsvcgui
 ```
 
-1. The main window lists all systemd services. Use **Refresh** on the toolbar to reload it.
+1. The main window lists systemd services. Use the filters to choose system services, user services or both, and which states to show. Use **Refresh** on the toolbar to reload the list.
 2. Click a service to see its details in the side panel.
 3. Use the **Start**, **Stop**, **Restart**, **Enable** or **Disable** buttons, and confirm the dialog.
-4. After creating or editing unit files in `/etc/systemd/system/`, click **Daemon Reload** so systemd picks up the changes.
+4. After creating or editing unit files in `/etc/systemd/system/` (system) or `~/.config/systemd/user/` (user), click **Daemon Reload** so systemd picks up the changes. Select the matching scope filter first, or *All* to reload both.
 
 > [!NOTE]
-> Changing a service's state requires administrator privileges. When you run the application as a normal user, systemd asks for your password through polkit, which needs a polkit authentication agent. Most desktop environments run one by default.
+> Changing a system service's state requires administrator privileges. When you run the application as a normal user, systemd asks for your password through polkit, which needs a polkit authentication agent. Most desktop environments run one by default. User services don't need a password.
 
 ## Known issues
 
-- **Enable/Disable** buttons don't yet reflect the service's real enablement state. See the [issue tracker](https://github.com/rdxdt/sdsvc-gui/issues).
-- The service list is not refreshed automatically after an action; click **Refresh** to see the new state.
+- User services need a running user session. If the application runs as root (for example through `sudo`), there's no user manager to talk to, and only system services are listed.
+- See the [issue tracker](https://github.com/rdxdt/sdsvc-gui/issues) for other known issues.
 
 ## Project structure
 
